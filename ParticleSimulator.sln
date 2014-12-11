@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParticleSimulator", "ParticleSimulator\ParticleSimulator\ParticleSimulator.csproj", "{06C733A4-BC28-4896-9532-30A96688E5CD}"
 EndProject
-Project("{96E2B04D-8817-42C6-938A-82C39BA4D311}") = "ParticleSimulatorContent", "ParticleSimulator\ParticleSimulatorContent\ParticleSimulatorContent.contentproj", "{8B2D2026-511B-48A9-BD87-03567D3A3414}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParticleSimulatorContent", "ParticleSimulator\ParticleSimulatorContent\ParticleSimulatorContent.contentproj", "{8B2D2026-511B-48A9-BD87-03567D3A3414}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

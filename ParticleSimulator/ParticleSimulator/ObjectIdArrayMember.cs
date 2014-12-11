@@ -4,7 +4,7 @@ namespace ParticleSimulator
 {
     internal class ObjectIdArrayMember
     {
-        public static readonly ObjectIdArrayMember NULL_MEMBER = new ObjectIdArrayMember(true);
+        private static readonly ObjectIdArrayMember __NullMember = new ObjectIdArrayMember(true);
 
         private byte __Bits;
 
@@ -16,6 +16,11 @@ namespace ParticleSimulator
         public ObjectIdArrayMember(byte bits)
         {
             __Bits = bits;
+        }
+
+        public static ObjectIdArrayMember CreateNull()
+        {
+            return __NullMember;
         }
 
         public byte H
@@ -46,7 +51,7 @@ namespace ParticleSimulator
 
         public override string ToString()
         {
-            if (Equals(NULL_MEMBER))
+            if (Equals(__NullMember))
                 return "NULL";
             return base.ToString();
         }

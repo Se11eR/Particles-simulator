@@ -36,20 +36,12 @@ namespace ParticleSimulator
             __CellSize = 1.5f * largestR * Constants.SQRT2 * 2;
             __Particles = particles;
 
+            __TotalCellIDs = 0;
             Parallel.For(0,
                 __ParticlesCount,
                 InitAction);
 
-            //TODO: Parallel prefix sum
-            __TotalCellIDs = 0;
-            Parallel.ForEach(__CellIdArray,
-                             m =>
-                             {
-                                 if (!m.Equals(CellIdArrayMember.NULL_MEMBER))
-                                     Interlocked.Increment(ref __TotalCellIDs);
-                             });
-
-            //TODO: GPU Radix sort
+            //TODO: GPU sort, or Parallel CPU sort
             CpuRadixSort(__CellIdArray);
 
             var collisionCellList = new ConcurrentQueue<CollisionCellListMember>();
@@ -78,10 +70,6 @@ namespace ParticleSimulator
             for (int T = 0; T < 4; T++)
             {
                 var t = T;
-                //foreach (var curCell in list)
-                //{
-                //    ProcessCollisionCell(particles, testAction, curCell, t);
-                //}
                 Parallel.ForEach(list, curCell => ProcessCollisionCell(particles, testAction, curCell, t));
             }
         }
@@ -90,15 +78,15 @@ namespace ParticleSimulator
         {
             for (var i = 0; i < __CellIdArray.Length; i++)
             {
-                __CellIdArray[i] = CellIdArrayMember.NULL_MEMBER;
+                __CellIdArray[i] = CellIdArrayMember.CreateNull();
             }
             for (var i = 0; i < __ObjectIdArray.Length; i++)
             {
-                __ObjectIdArray[i] = ObjectIdArrayMember.NULL_MEMBER;
+                __ObjectIdArray[i] = ObjectIdArrayMember.CreateNull();
             }
         }
 
-        private void InitPCells(Vector2 homeCell, float cellSize, Particle curPart, ObjectIdArrayMember obj, int i)
+        private int InitPCells(Vector2 homeCell, float cellSize, Particle curPart, ObjectIdArrayMember obj, int i)
         {
             var pCells = 0;
             //left-up
@@ -216,6 +204,8 @@ namespace ParticleSimulator
                     obj.SetPBit(GetCellType(coords));
                 }
             }
+
+            return pCells;
         }
 
         private void ProcessCollisionCell(List<Particle> particles, Action<Particle, Particle> testAction, CollisionCellListMember curCell, int t)
@@ -262,7 +252,8 @@ namespace ParticleSimulator
                                                             GetCellType(homeCell), homeCell);
             __ObjectIdArray[i] = new ObjectIdArrayMember((byte)GetCellType(homeCell));
 
-            InitPCells(homeCell, __CellSize, curPart, __ObjectIdArray[i], i);
+            var pcells = InitPCells(homeCell, __CellSize, curPart, __ObjectIdArray[i], i);
+            Interlocked.Add(ref __TotalCellIDs, pcells + 1);
         }
 
         private static void CreateCollisionCellListParallel(IProducerConsumerCollection<CollisionCellListMember> collisionList,
@@ -280,7 +271,7 @@ namespace ParticleSimulator
             {
                 while (curIndex < cellIdArray.Length)
                 {
-                    if (!cellIdArray[curIndex].Equals(CellIdArrayMember.NULL_MEMBER) && h == cellIdArray[curIndex].CellHash)
+                    if (!cellIdArray[curIndex].IsNull && h == cellIdArray[curIndex].CellHash)
                         curIndex++;
                     else
                         break;
@@ -294,7 +285,7 @@ namespace ParticleSimulator
 
             while (curIndex < cellIdArray.Length)
             {
-                if (cellIdArray[curIndex].Equals(CellIdArrayMember.NULL_MEMBER))
+                if (cellIdArray[curIndex].IsNull)
                 {
                     counter = ResetAdd(collisionList,
                                     counter,
@@ -417,7 +408,6 @@ namespace ParticleSimulator
             }
         }
         
-
         private static Vector2 GetCellCoords(float cellSize, Vector2 coords)
         {
             return new Vector2((int)(coords.X / cellSize), (int)(coords.Y / cellSize));
