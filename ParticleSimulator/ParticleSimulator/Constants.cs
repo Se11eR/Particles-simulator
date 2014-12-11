@@ -1,4 +1,4 @@
-﻿namespace BrownianMotion
+﻿namespace ParticleSimulator
 {
     public static class Constants
     {

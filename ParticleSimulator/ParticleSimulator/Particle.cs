@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace BrownianMotion
+namespace ParticleSimulator
 {
     internal class Particle
     {
@@ -11,8 +11,6 @@ namespace BrownianMotion
         private float __Radius;
         private float __ScaledR;
         private readonly float __M;
-
-        public static HashSet<Tuple<Particle, Particle>> CheckedPairs = new HashSet<Tuple<Particle, Particle>>(); 
 
         public Particle(Vector2 coords, Vector2 speed, float radius, float m)
         {
@@ -179,67 +177,58 @@ namespace BrownianMotion
             if (p1 == p2)
                 return;
 
-            if (!CheckedPairs.Contains(new Tuple<Particle, Particle>(p1, p2)))
+            if (AreColliding(p1, p2))
             {
-                CheckedPairs.Add(new Tuple<Particle, Particle>(p1, p2));
-
-                if (AreColliding(p1, p2))
+                var delta = p1.Coords - p2.Coords;
+                var dist = delta.Length();
+                if (dist == 0)
                 {
-                    var delta = p1.Coords - p2.Coords;
-                    var dist = delta.Length();
-                    if (dist == 0)
-                    {
-                        dist = p1.R + p2.R - 1;
-                        delta = new Vector2(1.0f, 0.0f);
-                    }
-
-                    var mtd = delta * ((p1.R + p2.R) - dist) / dist;
-                    float im1 = 1 / p1.M;
-                    float im2 = 1 / p2.M;
-
-                    p1.Coords += mtd * (im1 / im1 + im2);
-                    p2.Coords -= mtd * (im2 / im1 + im2);
-
-                    //----
-
-                    //var v = p1.V - p2.V;
-                    //mtd.Normalize();
-                    //float vn;
-                    //Vector2.Dot(ref v, ref mtd, out vn);
-                    //if (vn > 0)
-                    //    return;
-
-                    //const float restitution = 1f;
-                    //var i = -((1f + restitution) * vn) / (im1 + im2);
-                    //var impulse = mtd * i;
-
-                    //p1.V += impulse * im1;
-                    //p2.V -= impulse * im2;
-
-                    Vector2 n = new Vector2(p2.X - p1.X, p2.Y - p1.Y);
-                    Vector2 un = n;
-                    un.Normalize();
-                    Vector2 ut = new Vector2(-un.Y, un.X);
-
-                    float v1ns;
-                    Vector2.Dot(ref p1.__Speed, ref un, out v1ns);
-                    float v1ts;
-                    Vector2.Dot(ref p1.__Speed, ref ut, out v1ts);
-                    float v2ns;
-                    Vector2.Dot(ref p2.__Speed, ref un, out v2ns);
-                    float v2ts;
-                    Vector2.Dot(ref p2.__Speed, ref ut, out v2ts);
-
-                    var v1newn = (((p1.M - p2.M) * v1ns + 2f * p2.M * v2ns) / (p1.M + p2.M)) * un;
-                    var v2newn = (((p2.M - p1.M) * v1ns + 2f * p2.M * v1ns) / (p1.M + p2.M)) * un;
-
-                    p1.V = v1newn + v1ts * ut;
-                    p2.V = v2newn + v2ts * ut;
+                    dist = p1.R + p2.R - 1;
+                    delta = new Vector2(1.0f, 0.0f);
                 }
-            }
-            else
-            {
-                Console.WriteLine("Contains!");
+
+                var mtd = delta * ((p1.R + p2.R) - dist) / dist;
+                float im1 = 1 / p1.M;
+                float im2 = 1 / p2.M;
+
+                p1.Coords += mtd * (im1 / im1 + im2);
+                p2.Coords -= mtd * (im2 / im1 + im2);
+
+                //----
+
+                //var v = p1.V - p2.V;
+                //mtd.Normalize();
+                //float vn;
+                //Vector2.Dot(ref v, ref mtd, out vn);
+                //if (vn > 0)
+                //    return;
+
+                //const float restitution = 1f;
+                //var i = -((1f + restitution) * vn) / (im1 + im2);
+                //var impulse = mtd * i;
+
+                //p1.V += impulse * im1;
+                //p2.V -= impulse * im2;
+
+                Vector2 n = new Vector2(p2.X - p1.X, p2.Y - p1.Y);
+                Vector2 un = n;
+                un.Normalize();
+                Vector2 ut = new Vector2(-un.Y, un.X);
+
+                float v1ns;
+                Vector2.Dot(ref p1.__Speed, ref un, out v1ns);
+                float v1ts;
+                Vector2.Dot(ref p1.__Speed, ref ut, out v1ts);
+                float v2ns;
+                Vector2.Dot(ref p2.__Speed, ref un, out v2ns);
+                float v2ts;
+                Vector2.Dot(ref p2.__Speed, ref ut, out v2ts);
+
+                var v1newn = (((p1.M - p2.M) * v1ns + 2f * p2.M * v2ns) / (p1.M + p2.M)) * un;
+                var v2newn = (((p2.M - p1.M) * v1ns + 2f * p2.M * v1ns) / (p1.M + p2.M)) * un;
+
+                p1.V = v1newn + v1ts * ut;
+                p2.V = v2newn + v2ts * ut;
             }
         }
     }

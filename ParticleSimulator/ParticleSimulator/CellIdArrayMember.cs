@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework;
 
-namespace BrownianMotion
+namespace ParticleSimulator
 {
     internal struct CellIdArrayMember
     {

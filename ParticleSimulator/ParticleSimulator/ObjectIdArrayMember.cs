@@ -1,6 +1,6 @@
 using System;
 
-namespace BrownianMotion
+namespace ParticleSimulator
 {
     internal class ObjectIdArrayMember
     {

@@ -5,7 +5,7 @@ using Drawing;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace BrownianMotion
+namespace ParticleSimulator
 {
     /// <summary>
     /// This is the main type for your game
@@ -119,8 +119,6 @@ namespace BrownianMotion
             }
 
             __Detector.PerformTest(__AllParticles, __AllParticles[0].R, Particle.ResolveCollision);
-
-            Particle.CheckedPairs.Clear();
 
             if (__AllParticles.Any() && __VrownianCoords.Any())
                 if (__AllParticles.Last().Coords != __VrownianCoords.Last())

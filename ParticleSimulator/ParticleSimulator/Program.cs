@@ -1,4 +1,4 @@
-namespace BrownianMotion
+namespace ParticleSimulator
 {
 #if WINDOWS || XBOX
     static class Program

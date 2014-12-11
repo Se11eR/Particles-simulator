@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
-namespace BrownianMotion
+namespace ParticleSimulator
 {
     internal class ParallelSpartialSubdivionCD
     {
