@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Security.Policy;
 using System.Threading;
@@ -14,6 +15,7 @@ namespace BrownianMotion
         private readonly ObjectIdArrayMember[] __ObjectIdArray;
         private int __TotalCellIDs;
         private float __CellSize;
+        private List<Particle> __Particles;
 
         public ParallelSpartialSubdivionCD(int particlesCount)
         {
@@ -30,25 +32,15 @@ namespace BrownianMotion
 
         public void PerformTest(List<Particle> particles, float largestR, Action<Particle, Particle> testAction)
         {
-            for (int i = 0; i < __CellIdArray.Length; i++)
-            {
-                __CellIdArray[i] = CellIdArrayMember.NULL_MEMBER;
-            }
-            for (int i = 0; i < __ObjectIdArray.Length; i++)
-            {
-                __ObjectIdArray[i] = ObjectIdArrayMember.NULL_MEMBER;
-            }
-
+            ClearArrays();
             __CellSize = 1.5f * largestR * Constants.SQRT2 * 2;
+            __Particles = particles;
 
-            for (int i = 0; i < __ParticlesCount; i++)
-            {
-                InitAction(particles, __CellSize)(i);
-            }
-            //Parallel.For(0,
-            //             __ParticlesCount,
-            //             InitAction(particles, cellSize));
+            Parallel.For(0,
+                __ParticlesCount,
+                InitAction);
 
+            //TODO: Parallel prefix sum
             __TotalCellIDs = 0;
             Parallel.ForEach(__CellIdArray,
                              m =>
@@ -57,45 +49,52 @@ namespace BrownianMotion
                                      Interlocked.Increment(ref __TotalCellIDs);
                              });
 
+            //TODO: GPU Radix sort
             CpuRadixSort(__CellIdArray);
 
-            //var collisionCellList = new ConcurrentQueue<CollisionCellListMember>();
-            
-            
-            //var blockSize = __CellIdArray.Length / Environment.ProcessorCount;
-            //var tasks = new Task[Environment.ProcessorCount];
-            //var taskCounter = 0;
-            //for (int i = 0; i < __CellIdArray.Length; i += blockSize)
-            //{
-            //    if (i > __CellIdArray.Length - blockSize)
-            //        blockSize = __CellIdArray.Length - i;
+            var collisionCellList = new ConcurrentQueue<CollisionCellListMember>();
+            var blockSize = __CellIdArray.Length / Environment.ProcessorCount;
+            var tasks = new Task[Environment.ProcessorCount];
+            var taskCounter = 0;
+            for (var i = 0; i < __CellIdArray.Length; i += blockSize)
+            {
+                if (i > __CellIdArray.Length - blockSize)
+                    blockSize = __CellIdArray.Length - i;
 
-            //    int i1 = i;
-            //    int size = blockSize;
-            //    tasks[taskCounter] = Task.Factory.StartNew(
-            //                          () =>
-            //                          CreateCollisionCellListParallel(collisionCellList,
-            //                                                          __CellIdArray,
-            //                                                          i1,
-            //                                                          size));
-            //    taskCounter++;
-            //}
-            //Task.WaitAll(tasks);
-
-            var collisionCellList = new List<CollisionCellListMember>();
-
-            CreateCollisionCellListParallel(collisionCellList, __CellIdArray, 0, __TotalCellIDs);
+                var i1 = i;
+                var size = blockSize;
+                tasks[taskCounter] = Task.Factory.StartNew(
+                                      () =>
+                                      CreateCollisionCellListParallel(collisionCellList,
+                                                                      __CellIdArray,
+                                                                      i1,
+                                                                      size));
+                taskCounter++;
+            }
+            Task.WaitAll(tasks);
 
             var list = collisionCellList.ToArray();
             //4 passes
             for (int T = 0; T < 4; T++)
             {
-                int t = T;
-                foreach (var curCell in list)
-                {
-                    ProcessCollisionCell(particles, testAction, curCell, t);
-                }
-                //Parallel.ForEach(list, curCell => ProcessCollisionCell(particles, testAction, curCell, t));
+                var t = T;
+                //foreach (var curCell in list)
+                //{
+                //    ProcessCollisionCell(particles, testAction, curCell, t);
+                //}
+                Parallel.ForEach(list, curCell => ProcessCollisionCell(particles, testAction, curCell, t));
+            }
+        }
+
+        private void ClearArrays()
+        {
+            for (var i = 0; i < __CellIdArray.Length; i++)
+            {
+                __CellIdArray[i] = CellIdArrayMember.NULL_MEMBER;
+            }
+            for (var i = 0; i < __ObjectIdArray.Length; i++)
+            {
+                __ObjectIdArray[i] = ObjectIdArrayMember.NULL_MEMBER;
             }
         }
 
@@ -251,58 +250,60 @@ namespace BrownianMotion
             }
         }
 
-        private Action<int> InitAction(IList<Particle> particles, float cellSize)
+        private void InitAction(int i)
         {
-            return i =>
-            {
-                var curPart = particles[i];
-                curPart.ScaledR = curPart.R * Constants.SQRT2;
-                var homeCell = GetCellCoords(cellSize, curPart.Coords);
-                var homeCellId = CellCoordsHash(homeCell);
-                __CellIdArray[i * 4] = new CellIdArrayMember(true,
-                                                             homeCellId,
-                                                             i,
-                                                             GetCellType(homeCell), homeCell);
-                __ObjectIdArray[i] = new ObjectIdArrayMember((byte)GetCellType(homeCell));
+            var curPart = __Particles[i];
+            curPart.ScaledR = curPart.R * Constants.SQRT2;
+            var homeCell = GetCellCoords(__CellSize, curPart.Coords);
+            var homeCellId = CellCoordsHash(homeCell);
+            __CellIdArray[i * 4] = new CellIdArrayMember(true,
+                                                            homeCellId,
+                                                            i,
+                                                            GetCellType(homeCell), homeCell);
+            __ObjectIdArray[i] = new ObjectIdArrayMember((byte)GetCellType(homeCell));
 
-                InitPCells(homeCell, cellSize, curPart, __ObjectIdArray[i], i);
-            };
+            InitPCells(homeCell, __CellSize, curPart, __ObjectIdArray[i], i);
         }
 
-        private static void CreateCollisionCellListParallel(ICollection<CollisionCellListMember> collisionList,
+        private static void CreateCollisionCellListParallel(IProducerConsumerCollection<CollisionCellListMember> collisionList,
                                                    CellIdArrayMember[] cellIdArray,
                                                    int startIndex,
                                                    int blockSize)
         {
+
+            //TODO: метод работает неправильно
             var lastIntendedIndex = startIndex + blockSize;
+
+            var curIndex = startIndex + 1;
+            uint h = cellIdArray[startIndex].CellHash;
+            if (startIndex > 0)
+            {
+                while (curIndex < cellIdArray.Length)
+                {
+                    if (!cellIdArray[curIndex].Equals(CellIdArrayMember.NULL_MEMBER) && h == cellIdArray[curIndex].CellHash)
+                        curIndex++;
+                    else
+                        break;
+                }
+            }
 
             var hCounter = 0;
             var pCounter = 0;
             var counter = 0;
-            var curIndex = startIndex + 1;
             var lastSequenceStart = -1;
-            var isSkipping = false;
-            while (true)
+
+            while (curIndex < cellIdArray.Length)
             {
-                //if (curIndex >= cellIdArray.Length || (curIndex > lastIntendedIndex && lastSequenceStart == -1))
-                //    break;
-
-                if (curIndex >= cellIdArray.Length || curIndex > lastIntendedIndex)
-                    break;
-
                 if (cellIdArray[curIndex].Equals(CellIdArrayMember.NULL_MEMBER))
                 {
-                    if (isSkipping)
-                    {
-                        isSkipping = false;
-                        goto CONTINUE;
-                    }
-
-                    counter = Reset(collisionList,
+                    counter = ResetAdd(collisionList,
                                     counter,
                                     ref lastSequenceStart,
                                     ref hCounter,
                                     ref pCounter);
+
+                    if (curIndex > lastIntendedIndex)
+                        break;
 
                     goto CONTINUE;
                 }
@@ -333,17 +334,14 @@ namespace BrownianMotion
                 }
                 else
                 {
-                    if (isSkipping)
-                    {
-                        isSkipping = false;
-                        goto CONTINUE;
-                    }
-
-                    counter = Reset(collisionList,
+                    counter = ResetAdd(collisionList,
                             counter,
                             ref lastSequenceStart,
                             ref hCounter,
                             ref pCounter);
+
+                    if (curIndex > lastIntendedIndex)
+                        break;
                 }
 
             CONTINUE:
@@ -351,14 +349,14 @@ namespace BrownianMotion
             }
         }
 
-        private static int Reset(ICollection<CollisionCellListMember> collisionList,
+        private static int ResetAdd(IProducerConsumerCollection<CollisionCellListMember> collisionList,
                                  int counter,
                                  ref int lastSequenceStart,
                                  ref int hCounter,
                                  ref int pCounter)
         {
             if (counter > 1)
-                collisionList.Add(new CollisionCellListMember(lastSequenceStart, hCounter, pCounter));
+                collisionList.TryAdd(new CollisionCellListMember(lastSequenceStart, hCounter, pCounter));
 
             lastSequenceStart = -1;
             hCounter = 0;
