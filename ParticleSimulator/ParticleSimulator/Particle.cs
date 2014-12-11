@@ -11,7 +11,6 @@ namespace BrownianMotion
         private float __Radius;
         private float __ScaledR;
         private readonly float __M;
-        private BoundingSphere __Sphere;
 
         public static HashSet<Tuple<Particle, Particle>> CheckedPairs = new HashSet<Tuple<Particle, Particle>>(); 
 
@@ -75,6 +74,12 @@ namespace BrownianMotion
             {
                 __Coords = value;
             }
+        }
+
+        public float ScaledR
+        {
+            get { return __ScaledR; }
+            set { __ScaledR = value; }
         }
 
         public void Update(float fraction)

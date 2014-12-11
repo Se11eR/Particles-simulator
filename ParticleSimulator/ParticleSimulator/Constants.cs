@@ -13,7 +13,6 @@
 
         public const int UNIT_PIXEL_SIZE = 20;
 
-
         public const int GAME_VIEW_WIDTH = UNIT_PIXEL_SIZE * GAME_UNIT_WIDTH;
         public const int GAME_VIEW_HEIGHT = UNIT_PIXEL_SIZE * GAME_UNIT_HEIGHT;
 

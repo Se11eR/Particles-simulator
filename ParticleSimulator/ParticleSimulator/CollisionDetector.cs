@@ -9,113 +9,6 @@ namespace BrownianMotion
 {
     internal class CollisionDetector
     {
-        private struct CellIdArrayMember
-        {
-            public static readonly CellIdArrayMember NULL_MEMBER = new CellIdArrayMember(true);
-
-            public readonly byte IsHCell;
-            public readonly uint CellHash;
-            public readonly uint ObjectIndex;
-            public readonly byte Type;
-            public readonly Vector2 Coords;
-
-            public CellIdArrayMember(bool isHCell, uint cellHash, int objectIndex, sbyte type, Vector2 coords)
-            {
-                IsHCell = (byte)(isHCell ? 1 : 0);
-                CellHash = cellHash;
-                Coords = coords;
-                ObjectIndex = (uint)objectIndex;
-                Type = (byte)type;
-            }
-
-            private CellIdArrayMember(bool dummy)
-            {
-                Coords = Vector2.Zero;
-                IsHCell = byte.MaxValue;
-                CellHash = uint.MaxValue;
-                ObjectIndex = uint.MaxValue;
-                Type = byte.MaxValue;
-            }
-
-            public override string ToString()
-            {
-                if (!Equals(CellIdArrayMember.NULL_MEMBER))
-                    return String.Format("Coords: {4}, CH: {0}, Obj: {1}, T: {2}, H: {3}",
-                                         CellHash,
-                                         ObjectIndex,
-                                         Type,
-                                         IsHCell,
-                                         Coords);
-                else
-                    return "NULL";
-            }
-        }
-
-        private class ObjectIdArrayMember
-        {
-            public static readonly ObjectIdArrayMember NULL_MEMBER = new ObjectIdArrayMember(true);
-
-            private byte __Bits;
-
-            private ObjectIdArrayMember(bool invallid)
-            {
-                __Bits = byte.MaxValue;
-            }
-
-            public ObjectIdArrayMember(byte bits)
-            {
-                __Bits = bits;
-            }
-
-            public byte H
-            {
-                get
-                {
-                    return (byte)(__Bits & 3);
-                }
-            }
-
-            public byte P
-            {
-                get
-                {
-                    return (byte)((__Bits >> 2) & 0xF);
-                }
-            }
-
-            public void SetPBit(int pbit)
-            {
-                __Bits |= (byte)(1 << (pbit + 2));
-            }
-
-            public static int GetPBitsAnd(ObjectIdArrayMember a, ObjectIdArrayMember b)
-            {
-                return (a.__Bits & b.__Bits) >> 2;
-            }
-
-            public override string ToString()
-            {
-                if (Equals(NULL_MEMBER))
-                    return "NULL";
-                return base.ToString();
-            }
-        }
-
-        private struct CollisionCellListMember
-        {
-            public readonly int CellArrayInd;
-            public readonly int HCount;
-            public readonly int Pcount;
-
-            public CollisionCellListMember(int cellArrayInd, int hCount, int pcount)
-                : this()
-            {
-                CellArrayInd = cellArrayInd;
-                HCount = hCount;
-                Pcount = pcount;
-            }
-        }
-
         private readonly int __ParticlesCount;
 
         private readonly CellIdArrayMember[] __CellIdArray;
@@ -238,7 +131,7 @@ namespace BrownianMotion
             return i =>
             {
                 var curPart = particles[i];
-                curPart.R *= Constants.SQRT2;
+                curPart.ScaledR = curPart.R * Constants.SQRT2;
                 var homeCell = GetCellCoords(cellSize, curPart.Coords);
                 var homeCellId = Hash(homeCell);
                 __CellIdArray[i * 4] = new CellIdArrayMember(true,
@@ -405,7 +298,7 @@ namespace BrownianMotion
             int pCells = 0;
             //left-up
             Vector2 c = homeCell * cellSize;
-            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.R * curPart.R)
+            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
             {
                 pCells++;
                 var coords = homeCell - Vector2.One;
@@ -417,7 +310,7 @@ namespace BrownianMotion
             }
 
             //up
-            if (Math.Abs(curPart.Y - c.Y) <= curPart.R)
+            if (Math.Abs(curPart.Y - c.Y) <= curPart.ScaledR)
             {
                 pCells++;
                 var coords = homeCell - Vector2.UnitY;
@@ -430,7 +323,7 @@ namespace BrownianMotion
 
             //up-right
             c = (homeCell + Vector2.UnitX) * cellSize;
-            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.R * curPart.R)
+            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
             {
                 pCells++;
                 var coords = new Vector2(homeCell.X + 1, homeCell.Y - 1);
@@ -444,7 +337,7 @@ namespace BrownianMotion
             //right
             if (pCells < 3)
             {
-                if (Math.Abs(curPart.X - c.X) <= curPart.R)
+                if (Math.Abs(curPart.X - c.X) <= curPart.ScaledR)
                 {
                     pCells++;
                     var coords = homeCell + Vector2.UnitX;
@@ -460,7 +353,7 @@ namespace BrownianMotion
             if (pCells < 3)
             {
                 c = (homeCell + Vector2.One) * cellSize;
-                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.R * curPart.R)
+                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
                 {
                     pCells++;
                     var coords = homeCell + Vector2.One;
@@ -476,7 +369,7 @@ namespace BrownianMotion
             //down
             if (pCells < 3)
             {
-                if (Math.Abs(curPart.Y - c.Y) <= curPart.R)
+                if (Math.Abs(curPart.Y - c.Y) <= curPart.ScaledR)
                 {
                     pCells++;
                     var coords = homeCell + Vector2.UnitY;
@@ -492,7 +385,7 @@ namespace BrownianMotion
             if (pCells < 3)
             {
                 c = (homeCell + Vector2.UnitY) * cellSize;
-                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.R * curPart.R)
+                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
                 {
                     pCells++;
                     var coords = new Vector2(homeCell.X - 1, homeCell.Y + 1);
@@ -507,7 +400,7 @@ namespace BrownianMotion
             //left
             if (pCells < 3)
             {
-                if (Math.Abs(curPart.X - c.X) <= curPart.R)
+                if (Math.Abs(curPart.X - c.X) <= curPart.ScaledR)
                 {
                     pCells++;
                     var coords = homeCell - Vector2.UnitX;
