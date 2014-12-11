@@ -7,20 +7,25 @@ using Microsoft.Xna.Framework;
 
 namespace BrownianMotion
 {
-    internal class CollisionDetector
+    internal class ParallelSpartialSubdivionCD
     {
         private readonly int __ParticlesCount;
-
         private readonly CellIdArrayMember[] __CellIdArray;
         private readonly ObjectIdArrayMember[] __ObjectIdArray;
         private int __TotalCellIDs;
-        public float CellSize;
+        private float __CellSize;
 
-        public CollisionDetector(int particlesCount)
+        public ParallelSpartialSubdivionCD(int particlesCount)
         {
             __ParticlesCount = particlesCount;
             __CellIdArray = new CellIdArrayMember[__ParticlesCount * 4];
             __ObjectIdArray = new ObjectIdArrayMember[__ParticlesCount * 4];
+        }
+
+        public float CellSize
+        {
+            get { return __CellSize; }
+            set { __CellSize = value; }
         }
 
         public void PerformTest(List<Particle> particles, float largestR, Action<Particle, Particle> testAction)
@@ -34,11 +39,11 @@ namespace BrownianMotion
                 __ObjectIdArray[i] = ObjectIdArrayMember.NULL_MEMBER;
             }
 
-            CellSize = 1.5f * largestR * Constants.SQRT2 * 2;
+            __CellSize = 1.5f * largestR * Constants.SQRT2 * 2;
 
             for (int i = 0; i < __ParticlesCount; i++)
             {
-                InitAction(particles, CellSize)(i);
+                InitAction(particles, __CellSize)(i);
             }
             //Parallel.For(0,
             //             __ParticlesCount,
@@ -94,6 +99,126 @@ namespace BrownianMotion
             }
         }
 
+        private void InitPCells(Vector2 homeCell, float cellSize, Particle curPart, ObjectIdArrayMember obj, int i)
+        {
+            var pCells = 0;
+            //left-up
+            var c = homeCell * cellSize;
+            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
+            {
+                pCells++;
+                var coords = homeCell - Vector2.One;
+                __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
+                                                                      CellCoordsHash(coords),
+                                                                      i,
+                                                                      GetCellType(coords), coords);
+                obj.SetPBit(GetCellType(coords));
+            }
+
+            //up
+            if (Math.Abs(curPart.Y - c.Y) <= curPart.ScaledR)
+            {
+                pCells++;
+                var coords = homeCell - Vector2.UnitY;
+                __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
+                                                                      CellCoordsHash(coords),
+                                                                      i,
+                                                                      GetCellType(coords), coords);
+                obj.SetPBit(GetCellType(coords));
+            }
+
+            //up-right
+            c = (homeCell + Vector2.UnitX) * cellSize;
+            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
+            {
+                pCells++;
+                var coords = new Vector2(homeCell.X + 1, homeCell.Y - 1);
+                __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
+                                                                      CellCoordsHash(coords),
+                                                                      i,
+                                                                      GetCellType(coords), coords);
+                obj.SetPBit(GetCellType(coords));
+            }
+
+            //right
+            if (pCells < 3)
+            {
+                if (Math.Abs(curPart.X - c.X) <= curPart.ScaledR)
+                {
+                    pCells++;
+                    var coords = homeCell + Vector2.UnitX;
+                    __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
+                                                                          CellCoordsHash(coords),
+                                                                          i,
+                                                                          GetCellType(coords), coords);
+                    obj.SetPBit(GetCellType(coords));
+                }
+            }
+
+            //down-right
+            if (pCells < 3)
+            {
+                c = (homeCell + Vector2.One) * cellSize;
+                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
+                {
+                    pCells++;
+                    var coords = homeCell + Vector2.One;
+                    __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
+                                                                          CellCoordsHash(coords),
+                                                                          i,
+                                                                          GetCellType(coords), coords);
+                    obj.SetPBit(GetCellType(coords));
+                }
+            }
+
+
+            //down
+            if (pCells < 3)
+            {
+                if (Math.Abs(curPart.Y - c.Y) <= curPart.ScaledR)
+                {
+                    pCells++;
+                    var coords = homeCell + Vector2.UnitY;
+                    __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
+                                                                          CellCoordsHash(coords),
+                                                                          i,
+                                                                          GetCellType(coords), coords);
+                    obj.SetPBit(GetCellType(coords));
+                }
+            }
+
+            //down-left
+            if (pCells < 3)
+            {
+                c = (homeCell + Vector2.UnitY) * cellSize;
+                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
+                {
+                    pCells++;
+                    var coords = new Vector2(homeCell.X - 1, homeCell.Y + 1);
+                    __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
+                                                                          CellCoordsHash(coords),
+                                                                          i,
+                                                                          GetCellType(coords), coords);
+                    obj.SetPBit(GetCellType(coords));
+                }
+            }
+
+            //left
+            if (pCells < 3)
+            {
+                if (Math.Abs(curPart.X - c.X) <= curPart.ScaledR)
+                {
+                    pCells++;
+                    var coords = homeCell - Vector2.UnitX;
+                    __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
+                                                                          CellCoordsHash(coords),
+                                                                          i,
+                                                                          GetCellType(coords), coords);
+                    obj.SetPBit(GetCellType(coords));
+                }
+            }
+        }
+
         private void ProcessCollisionCell(List<Particle> particles, Action<Particle, Particle> testAction, CollisionCellListMember curCell, int t)
         {
             if (__CellIdArray[curCell.CellArrayInd].Type == t)
@@ -126,14 +251,14 @@ namespace BrownianMotion
             }
         }
 
-        private Action<int> InitAction(List<Particle> particles, float cellSize)
+        private Action<int> InitAction(IList<Particle> particles, float cellSize)
         {
             return i =>
             {
                 var curPart = particles[i];
                 curPart.ScaledR = curPart.R * Constants.SQRT2;
                 var homeCell = GetCellCoords(cellSize, curPart.Coords);
-                var homeCellId = Hash(homeCell);
+                var homeCellId = CellCoordsHash(homeCell);
                 __CellIdArray[i * 4] = new CellIdArrayMember(true,
                                                              homeCellId,
                                                              i,
@@ -144,16 +269,16 @@ namespace BrownianMotion
             };
         }
 
-        private void CreateCollisionCellListParallel(ICollection<CollisionCellListMember> collisionList,
+        private static void CreateCollisionCellListParallel(ICollection<CollisionCellListMember> collisionList,
                                                    CellIdArrayMember[] cellIdArray,
                                                    int startIndex,
                                                    int blockSize)
         {
-            int lastIntendedIndex = startIndex + blockSize;
+            var lastIntendedIndex = startIndex + blockSize;
 
-            int hCounter = 0;
-            int pCounter = 0;
-            int counter = 0;
+            var hCounter = 0;
+            var pCounter = 0;
+            var counter = 0;
             var curIndex = startIndex + 1;
             var lastSequenceStart = -1;
             var isSkipping = false;
@@ -293,132 +418,14 @@ namespace BrownianMotion
                 }
             }
         }
-        private void InitPCells(Vector2 homeCell, float cellSize, Particle curPart, ObjectIdArrayMember obj, int i)
-        {
-            int pCells = 0;
-            //left-up
-            Vector2 c = homeCell * cellSize;
-            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
-            {
-                pCells++;
-                var coords = homeCell - Vector2.One;
-                __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
-                                                                      Hash(coords),
-                                                                      i,
-                                                                      GetCellType(coords), coords);
-                obj.SetPBit(GetCellType(coords));
-            }
-
-            //up
-            if (Math.Abs(curPart.Y - c.Y) <= curPart.ScaledR)
-            {
-                pCells++;
-                var coords = homeCell - Vector2.UnitY;
-                __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
-                                                                      Hash(coords),
-                                                                      i,
-                                                                      GetCellType(coords), coords);
-                obj.SetPBit(GetCellType(coords));
-            }
-
-            //up-right
-            c = (homeCell + Vector2.UnitX) * cellSize;
-            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
-            {
-                pCells++;
-                var coords = new Vector2(homeCell.X + 1, homeCell.Y - 1);
-                __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
-                                                                      Hash(coords),
-                                                                      i,
-                                                                      GetCellType(coords), coords);
-                obj.SetPBit(GetCellType(coords));
-            }
-
-            //right
-            if (pCells < 3)
-            {
-                if (Math.Abs(curPart.X - c.X) <= curPart.ScaledR)
-                {
-                    pCells++;
-                    var coords = homeCell + Vector2.UnitX;
-                    __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
-                                                                          Hash(coords),
-                                                                          i,
-                                                                          GetCellType(coords), coords);
-                    obj.SetPBit(GetCellType(coords));
-                }
-            }
-
-            //down-right
-            if (pCells < 3)
-            {
-                c = (homeCell + Vector2.One) * cellSize;
-                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
-                {
-                    pCells++;
-                    var coords = homeCell + Vector2.One;
-                    __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
-                                                                          Hash(coords),
-                                                                          i,
-                                                                          GetCellType(coords), coords);
-                    obj.SetPBit(GetCellType(coords));
-                }
-            }
-
-
-            //down
-            if (pCells < 3)
-            {
-                if (Math.Abs(curPart.Y - c.Y) <= curPart.ScaledR)
-                {
-                    pCells++;
-                    var coords = homeCell + Vector2.UnitY;
-                    __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
-                                                                          Hash(coords),
-                                                                          i,
-                                                                          GetCellType(coords), coords);
-                    obj.SetPBit(GetCellType(coords));
-                }
-            }
-
-            //down-left
-            if (pCells < 3)
-            {
-                c = (homeCell + Vector2.UnitY) * cellSize;
-                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
-                {
-                    pCells++;
-                    var coords = new Vector2(homeCell.X - 1, homeCell.Y + 1);
-                    __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
-                                                                          Hash(coords),
-                                                                          i,
-                                                                          GetCellType(coords), coords);
-                    obj.SetPBit(GetCellType(coords));
-                }
-            }
-
-            //left
-            if (pCells < 3)
-            {
-                if (Math.Abs(curPart.X - c.X) <= curPart.ScaledR)
-                {
-                    pCells++;
-                    var coords = homeCell - Vector2.UnitX;
-                    __CellIdArray[i * 4 + pCells] = new CellIdArrayMember(false,
-                                                                          Hash(coords),
-                                                                          i,
-                                                                          GetCellType(coords), coords);
-                    obj.SetPBit(GetCellType(coords));
-                }
-            }
-        }
+        
 
         private static Vector2 GetCellCoords(float cellSize, Vector2 coords)
         {
             return new Vector2((int)(coords.X / cellSize), (int)(coords.Y / cellSize));
         }
 
-        private uint Hash(Vector2 c)
+        private static uint CellCoordsHash(Vector2 c)
         {
             unchecked
             {
@@ -429,7 +436,7 @@ namespace BrownianMotion
             }
         }
 
-        private sbyte GetCellType(Vector2 coord)
+        private static sbyte GetCellType(Vector2 coord)
         {
             var x = (int)coord.X;
             var y = (int)coord.Y;

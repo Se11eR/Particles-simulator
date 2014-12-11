@@ -19,7 +19,7 @@ namespace BrownianMotion
         private List<Particle> __AllParticles = new List<Particle>();
         private List<Vector2> __VrownianCoords = new List<Vector2>();
 
-        private CollisionDetector __Detector;
+        private ParallelSpartialSubdivionCD __Detector;
 
         public BrownianMotion()
         {
@@ -93,7 +93,7 @@ namespace BrownianMotion
             //                       Constants.PARTICLE_RADIUS * 3.5f,
             //                       Constants.PARTICLE_MASS * 150));
 
-            __Detector = new CollisionDetector(__AllParticles.Count);
+            __Detector = new ParallelSpartialSubdivionCD(__AllParticles.Count);
         }
 
         protected override void UnloadContent()

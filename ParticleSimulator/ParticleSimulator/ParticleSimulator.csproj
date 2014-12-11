@@ -80,7 +80,7 @@
     <Compile Include="BrownianMotion.cs" />
     <Compile Include="CellIdArrayMember.cs" />
     <Compile Include="CollisionCellListMember.cs" />
-    <Compile Include="CollisionDetector.cs" />
+    <Compile Include="ParallelSpartialSubdivionCD.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="ObjectIdArrayMember.cs" />

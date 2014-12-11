@@ -9,7 +9,7 @@
         public const float PARTICLE_MASS = 1;
         public const float PARTICLE_MAX_SPEED_UPS = 10;
 
-        public const int PARTICLE_COUNT = 4;
+        public const int PARTICLE_COUNT = 6;
 
         public const int UNIT_PIXEL_SIZE = 20;
 
