@@ -24,12 +24,6 @@ namespace ParticleSimulator
             __ObjectIdArray = new ObjectIdArrayMember[__ParticlesCount * 4];
         }
 
-        public float CellSize
-        {
-            get { return __CellSize; }
-            set { __CellSize = value; }
-        }
-
         public void PerformTest(List<Particle> particles, float largestR, Action<Particle, Particle> testAction)
         {
             ClearArrays();

@@ -3,13 +3,13 @@
     public static class Constants
     {
         public const int GAME_UNIT_WIDTH = 64;
-        public const int GAME_UNIT_HEIGHT = 48;
+        public const int GAME_UNIT_HEIGHT = 32;
 
-        public const float PARTICLE_RADIUS = 0.15f;
+        public const float PARTICLE_RADIUS = 0.05f;
         public const float PARTICLE_MASS = 1;
-        public const float PARTICLE_MAX_SPEED_UPS = 3;
+        public const float PARTICLE_MAX_SPEED_UPS = 2;
 
-        public const int PARTICLE_COUNT = 5000;
+        public const int PARTICLE_COUNT = 8000;
 
         public const int UNIT_PIXEL_SIZE = 20;
 
