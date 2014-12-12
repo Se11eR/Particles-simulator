@@ -91,7 +91,7 @@ namespace ParticleSimulator
             var pCells = 0;
             //left-up
             var c = homeCell * cellSize;
-            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
+            if (Vector2.DistanceSquared(curPart.C, c) <= curPart.ScaledR * curPart.ScaledR)
             {
                 pCells++;
                 var coords = homeCell - Vector2.One;
@@ -103,7 +103,7 @@ namespace ParticleSimulator
             }
 
             //up
-            if (Math.Abs(curPart.Y - c.Y) <= curPart.ScaledR)
+            if (Math.Abs(curPart.C.Y - c.Y) <= curPart.ScaledR)
             {
                 pCells++;
                 var coords = homeCell - Vector2.UnitY;
@@ -116,7 +116,7 @@ namespace ParticleSimulator
 
             //up-right
             c = (homeCell + Vector2.UnitX) * cellSize;
-            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
+            if (Vector2.DistanceSquared(curPart.C, c) <= curPart.ScaledR * curPart.ScaledR)
             {
                 pCells++;
                 var coords = new Vector2(homeCell.X + 1, homeCell.Y - 1);
@@ -130,7 +130,7 @@ namespace ParticleSimulator
             //right
             if (pCells < 3)
             {
-                if (Math.Abs(curPart.X - c.X) <= curPart.ScaledR)
+                if (Math.Abs(curPart.C.X - c.X) <= curPart.ScaledR)
                 {
                     pCells++;
                     var coords = homeCell + Vector2.UnitX;
@@ -146,7 +146,7 @@ namespace ParticleSimulator
             if (pCells < 3)
             {
                 c = (homeCell + Vector2.One) * cellSize;
-                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
+                if (Vector2.DistanceSquared(curPart.C, c) <= curPart.ScaledR * curPart.ScaledR)
                 {
                     pCells++;
                     var coords = homeCell + Vector2.One;
@@ -162,7 +162,7 @@ namespace ParticleSimulator
             //down
             if (pCells < 3)
             {
-                if (Math.Abs(curPart.Y - c.Y) <= curPart.ScaledR)
+                if (Math.Abs(curPart.C.Y - c.Y) <= curPart.ScaledR)
                 {
                     pCells++;
                     var coords = homeCell + Vector2.UnitY;
@@ -178,7 +178,7 @@ namespace ParticleSimulator
             if (pCells < 3)
             {
                 c = (homeCell + Vector2.UnitY) * cellSize;
-                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ScaledR * curPart.ScaledR)
+                if (Vector2.DistanceSquared(curPart.C, c) <= curPart.ScaledR * curPart.ScaledR)
                 {
                     pCells++;
                     var coords = new Vector2(homeCell.X - 1, homeCell.Y + 1);
@@ -193,7 +193,7 @@ namespace ParticleSimulator
             //left
             if (pCells < 3)
             {
-                if (Math.Abs(curPart.X - c.X) <= curPart.ScaledR)
+                if (Math.Abs(curPart.C.X - c.X) <= curPart.ScaledR)
                 {
                     pCells++;
                     var coords = homeCell - Vector2.UnitX;
@@ -244,7 +244,7 @@ namespace ParticleSimulator
         {
             var curPart = __Particles[i];
             curPart.ScaledR = curPart.R * Constants.SQRT2;
-            var homeCell = GetCellCoords(__CellSize, curPart.Coords);
+            var homeCell = GetCellCoords(__CellSize, curPart.C);
             var homeCellId = CellCoordsHash(homeCell);
             __CellIdArray[i * 4] = new CellIdArrayMember(true,
                                                             homeCellId,

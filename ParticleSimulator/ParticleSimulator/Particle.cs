@@ -6,55 +6,20 @@ namespace ParticleSimulator
 {
     internal class Particle
     {
-        private Vector2 __Coords;
-        private Vector2 __Speed;
-        private float __Radius;
+        private Vector2 __V;
+        
         private float __ScaledR;
         private readonly float __M;
 
+        public Vector2 C;
+        public float R;
+
         public Particle(Vector2 coords, Vector2 speed, float radius, float m)
         {
-            __Coords = coords;
-            __Speed = speed;
-            __Radius = radius;
+            C = coords;
+            __V = speed;
+            R = radius;
             __M = m;
-        }
-
-        public float X
-        {
-            get
-            {
-                return Coords.X;
-            }
-        }
-
-        public float Y
-        {
-            get
-            {
-                return Coords.Y;
-            }
-        }
-
-        public Vector2 V
-        {
-            get
-            {
-                return __Speed;
-            }
-            set
-            {
-                __Speed = value;
-            }
-        }
-
-        public float R
-        {
-            get
-            {
-                return __Radius;
-            }
-            set { __Radius = value; }
         }
 
         public float M
@@ -62,15 +27,6 @@ namespace ParticleSimulator
             get
             {
                 return __M;
-            }
-        }
-
-        public Vector2 Coords
-        {
-            get { return __Coords; }
-            set
-            {
-                __Coords = value;
             }
         }
 
@@ -83,32 +39,32 @@ namespace ParticleSimulator
         public void Update(float fraction)
         {
             CheckEdges();
-            __Coords += __Speed * fraction;
-            __Radius = Constants.PARTICLE_RADIUS;
+            C += __V * fraction;
+            R = Constants.PARTICLE_RADIUS;
         }
 
         private static bool AreColliding(Particle p1, Particle p2)
         {
-            return Vector2.DistanceSquared(p1.Coords, p2.Coords) <= Math.Pow((p1.R + p2.R), 2);
+            return Vector2.DistanceSquared(p1.C, p2.C) <= Math.Pow((p1.R + p2.R), 2);
         }
 
         private void CheckEdges()
         {
-            if (X - R <= 0)
+            if (C.X - R <= 0)
             {
-                ResolveCollision(this, new Particle(new Vector2(-R, Y), Vector2.Zero, R, Single.MaxValue), true);
+                ResolveCollision(this, new Particle(new Vector2(-R, C.Y), Vector2.Zero, R, Single.MaxValue), true);
             }
-            else if(X + R >= Constants.GAME_UNIT_WIDTH)
+            else if(C.X + R >= Constants.GAME_UNIT_WIDTH)
             {
-                ResolveCollision(this, new Particle(new Vector2(Constants.GAME_UNIT_WIDTH + R, Y), Vector2.Zero, R, Single.MaxValue), true);
+                ResolveCollision(this, new Particle(new Vector2(Constants.GAME_UNIT_WIDTH + R, C.Y), Vector2.Zero, R, Single.MaxValue), true);
             }
-            if (Y + R >= Constants.GAME_UNIT_HEIGHT)
+            if (C.Y + R >= Constants.GAME_UNIT_HEIGHT)
             {
-                ResolveCollision(this, new Particle(new Vector2(X, Constants.GAME_UNIT_HEIGHT + R), Vector2.Zero, R, Single.MaxValue), true);
+                ResolveCollision(this, new Particle(new Vector2(C.X, Constants.GAME_UNIT_HEIGHT + R), Vector2.Zero, R, Single.MaxValue), true);
             }
-            else if (Y - R <= 0)
+            else if (C.Y - R <= 0)
             {
-                ResolveCollision(this, new Particle(new Vector2(X, -R), Vector2.Zero, R, Single.MaxValue), true);
+                ResolveCollision(this, new Particle(new Vector2(C.X, -R), Vector2.Zero, R, Single.MaxValue), true);
             }
         }
 
@@ -119,7 +75,7 @@ namespace ParticleSimulator
 
             if (AreColliding(p1, p2))
             {
-                var delta = p1.Coords - p2.Coords;
+                var delta = p1.C - p2.C;
                 var dist = delta.Length();
                 if (dist == 0)
                 {
@@ -131,8 +87,8 @@ namespace ParticleSimulator
                 float im1 = 1 / p1.M;
                 float im2 = 1 / p2.M;
 
-                p1.Coords += mtd * (im1 / im1 + im2);
-                p2.Coords -= mtd * (im2 / im1 + im2);
+                p1.C += mtd * (im1 / im1 + im2);
+                p2.C -= mtd * (im2 / im1 + im2);
 
                 //----
 
@@ -150,25 +106,25 @@ namespace ParticleSimulator
                 //p1.V += impulse * im1;
                 //p2.V -= impulse * im2;
 
-                Vector2 n = new Vector2(p2.X - p1.X, p2.Y - p1.Y);
+                Vector2 n = new Vector2(p2.C.X - p1.C.X, p2.C.Y - p1.C.Y);
                 Vector2 un = n;
                 un.Normalize();
                 Vector2 ut = new Vector2(-un.Y, un.X);
 
                 float v1ns;
-                Vector2.Dot(ref p1.__Speed, ref un, out v1ns);
+                Vector2.Dot(ref p1.__V, ref un, out v1ns);
                 float v1ts;
-                Vector2.Dot(ref p1.__Speed, ref ut, out v1ts);
+                Vector2.Dot(ref p1.__V, ref ut, out v1ts);
                 float v2ns;
-                Vector2.Dot(ref p2.__Speed, ref un, out v2ns);
+                Vector2.Dot(ref p2.__V, ref un, out v2ns);
                 float v2ts;
-                Vector2.Dot(ref p2.__Speed, ref ut, out v2ts);
+                Vector2.Dot(ref p2.__V, ref ut, out v2ts);
 
                 var v1newn = (((p1.M - p2.M) * v1ns + 2f * p2.M * v2ns) / (p1.M + p2.M)) * un;
                 var v2newn = (((p2.M - p1.M) * v1ns + 2f * p2.M * v1ns) / (p1.M + p2.M)) * un;
 
-                p1.V = v1newn + v1ts * ut;
-                p2.V = v2newn + v2ts * ut;
+                p1.__V = v1newn + v1ts * ut;
+                p2.__V = v2newn + v2ts * ut;
             }
         }
 
@@ -179,7 +135,7 @@ namespace ParticleSimulator
 
             if (AreColliding(p1, p2))
             {
-                var delta = p1.Coords - p2.Coords;
+                var delta = p1.C - p2.C;
                 var dist = delta.Length();
                 if (dist == 0)
                 {
@@ -191,8 +147,8 @@ namespace ParticleSimulator
                 float im1 = 1 / p1.M;
                 float im2 = 1 / p2.M;
 
-                p1.Coords += mtd * (im1 / im1 + im2);
-                p2.Coords -= mtd * (im2 / im1 + im2);
+                p1.C += mtd * (im1 / im1 + im2);
+                p2.C -= mtd * (im2 / im1 + im2);
 
                 //----
 
@@ -210,25 +166,25 @@ namespace ParticleSimulator
                 //p1.V += impulse * im1;
                 //p2.V -= impulse * im2;
 
-                Vector2 n = new Vector2(p2.X - p1.X, p2.Y - p1.Y);
+                Vector2 n = new Vector2(p2.C.X - p1.C.X, p2.C.Y - p1.C.Y);
                 Vector2 un = n;
                 un.Normalize();
                 Vector2 ut = new Vector2(-un.Y, un.X);
 
                 float v1ns;
-                Vector2.Dot(ref p1.__Speed, ref un, out v1ns);
+                Vector2.Dot(ref p1.__V, ref un, out v1ns);
                 float v1ts;
-                Vector2.Dot(ref p1.__Speed, ref ut, out v1ts);
+                Vector2.Dot(ref p1.__V, ref ut, out v1ts);
                 float v2ns;
-                Vector2.Dot(ref p2.__Speed, ref un, out v2ns);
+                Vector2.Dot(ref p2.__V, ref un, out v2ns);
                 float v2ts;
-                Vector2.Dot(ref p2.__Speed, ref ut, out v2ts);
+                Vector2.Dot(ref p2.__V, ref ut, out v2ts);
 
                 var v1newn = (((p1.M - p2.M) * v1ns + 2f * p2.M * v2ns) / (p1.M + p2.M)) * un;
                 var v2newn = (((p2.M - p1.M) * v1ns + 2f * p2.M * v1ns) / (p1.M + p2.M)) * un;
 
-                p1.V = v1newn + v1ts * ut;
-                p2.V = v2newn + v2ts * ut;
+                p1.__V = v1newn + v1ts * ut;
+                p2.__V = v2newn + v2ts * ut;
             }
         }
     }

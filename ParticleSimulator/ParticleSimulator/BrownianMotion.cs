@@ -77,11 +77,13 @@ namespace ParticleSimulator
             GraphicsDevice.Clear(Color.White);
 
             __SpriteBatch.Begin();
-
             foreach (Particle particle in __AllParticles)
             {
                 //TODO: efficient drawing
-                __SpriteBatch.DrawCircle(particle.Coords * Constants.UNIT_PIXEL_SIZE,
+                Vector2 coords;
+                Vector2.Multiply(ref particle.C, Constants.UNIT_PIXEL_SIZE, out coords);
+
+                __SpriteBatch.DrawCircle(coords,
                                          particle.R * Constants.UNIT_PIXEL_SIZE,
                                          2,
                                          Color.Black,
