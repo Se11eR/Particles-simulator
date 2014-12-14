@@ -85,9 +85,9 @@ namespace ParticleSimulator
 
                 __SpriteBatch.DrawCircle(coords,
                                          particle.R * Constants.UNIT_PIXEL_SIZE,
-                                         20,
+                                         2,
                                          Color.Black,
-                                         20);
+                                         1);
             }
             
             //var pixelCellSize = (int)(__Detector.CellSize * Constants.UNIT_PIXEL_SIZE);
