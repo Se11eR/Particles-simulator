@@ -5,8 +5,9 @@ using System.Security.Policy;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using ParticleSimulator.Game;
 
-namespace ParticleSimulator
+namespace ParticleSimulator.ParallelSpartialSubdivision
 {
     internal class ParallelSpartialSubdivisionCD : IUniformCellCollisionDetector
     {

@@ -2,6 +2,7 @@
 using System.Threading;
 using Microsoft.Xna.Framework;
 using ParticleSimulator;
+using ParticleSimulator.Game;
 
 namespace ParticleSimulator
 {

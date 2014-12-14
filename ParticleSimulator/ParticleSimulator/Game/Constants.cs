@@ -1,4 +1,4 @@
-﻿namespace ParticleSimulator
+﻿namespace ParticleSimulator.Game
 {
     public static class Constants
     {

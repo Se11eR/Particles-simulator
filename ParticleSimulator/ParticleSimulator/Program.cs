@@ -1,3 +1,5 @@
+using ParticleSimulator.Game;
+
 namespace ParticleSimulator
 {
 #if WINDOWS || XBOX
@@ -8,7 +10,7 @@ namespace ParticleSimulator
         /// </summary>
         static void Main(string[] args)
         {
-            using (BrownianMotion game = new BrownianMotion())
+            using (var game = new BrownianMotion())
             {
                 game.Run();
             }

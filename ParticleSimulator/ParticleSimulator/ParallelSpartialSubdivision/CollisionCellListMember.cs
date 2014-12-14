@@ -1,4 +1,4 @@
-namespace ParticleSimulator
+namespace ParticleSimulator.ParallelSpartialSubdivision
 {
     internal struct CollisionCellListMember
     {

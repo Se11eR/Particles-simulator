@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework;
 
-namespace ParticleSimulator
+namespace ParticleSimulator.ParallelSpartialSubdivision
 {
     internal struct CellIdArrayMember
     {

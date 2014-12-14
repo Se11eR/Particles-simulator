@@ -1,6 +1,6 @@
 using System;
 
-namespace ParticleSimulator
+namespace ParticleSimulator.ParallelSpartialSubdivision
 {
     internal class ObjectIdArrayMember
     {

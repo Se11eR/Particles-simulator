@@ -4,13 +4,15 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ParticleSimulator.Helper;
+using ParticleSimulator.ParallelSpartialSubdivision;
 
-namespace ParticleSimulator
+namespace ParticleSimulator.Game
 {
     /// <summary>
     /// This is the main type for your game
     /// </summary>
-    public class BrownianMotion : Game
+    public class BrownianMotion : Microsoft.Xna.Framework.Game
     {
         private GraphicsDeviceManager __Graphics;
         private SpriteBatch __SpriteBatch;

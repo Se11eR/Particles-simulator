@@ -80,23 +80,21 @@
   <ItemGroup>
     <Compile Include="BaseParticle.cs" />
     <Compile Include="BaseParticleFactory.cs" />
-    <Compile Include="BrownianMotion.cs" />
-    <Compile Include="CellIdArrayMember.cs" />
-    <Compile Include="CollisionCellListMember.cs" />
+    <Compile Include="Game\BrownianMotion.cs" />
+    <Compile Include="ParallelSpartialSubdivision\CellIdArrayMember.cs" />
+    <Compile Include="ParallelSpartialSubdivision\CollisionCellListMember.cs" />
     <Compile Include="IBoundingCircle.cs" />
     <Compile Include="IBoundingCircleCollisionResolver.cs" />
     <Compile Include="ICircleCollisionDetector.cs" />
     <Compile Include="IUniformCellCollisionDetector.cs" />
-    <Compile Include="ParallelSpartialSubdivionCD.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="Direction.cs" />
-    <Compile Include="ObjectIdArrayMember.cs" />
+    <Compile Include="ParallelSpartialSubdivision\ParallelSpartialSubdivionCD.cs" />
+    <Compile Include="Game\Constants.cs" />
+    <Compile Include="ParallelSpartialSubdivision\ObjectIdArrayMember.cs" />
     <Compile Include="Particle.cs" />
     <Compile Include="ParticleSystem.cs" />
-    <Compile Include="Primitives2D.cs" />
+    <Compile Include="Helper\Primitives2D.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Game1.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Game.ico" />
