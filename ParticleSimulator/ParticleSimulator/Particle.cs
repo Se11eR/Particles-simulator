@@ -22,6 +22,7 @@ namespace ParticleSimulator
             /// <param name="particle2"></param>
             public void ResolveCollision(IBoundingCircle particle1, IBoundingCircle particle2)
             {
+                //TODO: Make IBoundingCircle an abstract class to avoid downcasting!
                 var p1 = particle1 as CircleParticle;
                 var p2 = particle2 as CircleParticle;
 
