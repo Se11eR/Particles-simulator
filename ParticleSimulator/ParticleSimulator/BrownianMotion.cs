@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,8 +16,8 @@ namespace ParticleSimulator
         private SpriteBatch __SpriteBatch;
 
         private readonly Random __Random = new Random(Int32.MaxValue / 2);
-        private CircleParticle[] __AllParticles = null;
-        private ParallelSpartialSubdivisionCD __Detector;
+        private CircleParticle[] __AllParticles;
+        private IUniformCellCollisionDetector __Detector;
 
         public BrownianMotion()
         {

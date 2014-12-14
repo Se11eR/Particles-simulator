@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 
 namespace ParticleSimulator
 {
-    internal class ParallelSpartialSubdivisionCD
+    internal class ParallelSpartialSubdivisionCD : IUniformCellCollisionDetector
     {
         private readonly int __ParticlesCount;
         private readonly IBoundingCircleCollisionResolver __Resolver;

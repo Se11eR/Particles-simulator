@@ -78,9 +78,15 @@
     <Reference Include="System.Net" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseParticle.cs" />
+    <Compile Include="BaseParticleFactory.cs" />
     <Compile Include="BrownianMotion.cs" />
     <Compile Include="CellIdArrayMember.cs" />
     <Compile Include="CollisionCellListMember.cs" />
+    <Compile Include="IBoundingCircle.cs" />
+    <Compile Include="IBoundingCircleCollisionResolver.cs" />
+    <Compile Include="ICircleCollisionDetector.cs" />
+    <Compile Include="IUniformCellCollisionDetector.cs" />
     <Compile Include="ParallelSpartialSubdivionCD.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Direction.cs" />
@@ -97,7 +103,6 @@
     <Content Include="GameThumbnail.png">
       <XnaPlatformSpecific>true</XnaPlatformSpecific>
     </Content>
-    <Content Include="ThirdParty\DrawingHelper.dll" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ParticleSimulatorContent\ParticleSimulatorContent.contentproj">

@@ -1,58 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using ParticleSimulator;
 
 namespace ParticleSimulator
 {
-    internal abstract class BaseParticle
-    {
-        protected Vector2 __C;
-        protected readonly float __M;
-        protected Vector2 __V;
-
-        protected BaseParticle(Vector2 coords, Vector2 speed, float m)
-        {
-            __C = coords;
-            __M = m;
-            __V = speed;
-        }
-
-        public abstract void Update(float fraction);
-
-        protected abstract void CheckResolveEdges();
-    }
-
-    internal abstract class BaseParticleFactory
-    {
-        public abstract List<BaseParticle> Emit(int count);
-    }
-
-    internal interface IBoundingCircle
-    {
-        float ModifiableR
-        {
-            get;
-            set;
-        }
-
-        Vector2 Coords
-        {
-            get;
-        }
-
-        float R
-        {
-            get;
-        }
-    }
-
-    internal interface IBoundingCircleCollisionResolver
-    {
-        void ResolveCollision(IBoundingCircle particle1, IBoundingCircle particle2);
-    }
-
     internal class CircleParticle : BaseParticle, IBoundingCircle
     {
         private class CircleParticleCR : IBoundingCircleCollisionResolver
@@ -159,7 +111,6 @@ namespace ParticleSimulator
         private static readonly Object __SLock = new Object();
         private static CircleParticleCR __Resolver;
 
-        private float __ModifiableR;
         public float __R;
 
         public CircleParticle(Vector2 coords, Vector2 speed, float radius, float m)
@@ -183,8 +134,8 @@ namespace ParticleSimulator
 
         public float ModifiableR
         {
-            get { return __ModifiableR; }
-            set { __ModifiableR = value; }
+            get;
+            set;
         }
 
         public Vector2 Coords
