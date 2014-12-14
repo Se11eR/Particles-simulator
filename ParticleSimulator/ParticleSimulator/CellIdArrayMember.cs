@@ -28,7 +28,7 @@ namespace ParticleSimulator
             Type = Byte.MaxValue;
         }
 
-        public static CellIdArrayMember CreateNull()
+        public static CellIdArrayMember GetNull()
         {
             return __NullMember;
         }

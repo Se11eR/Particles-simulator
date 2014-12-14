@@ -15,8 +15,8 @@ namespace ParticleSimulator
         private SpriteBatch __SpriteBatch;
 
         private readonly Random __Random = new Random(Int32.MaxValue / 2);
-        private List<Particle> __AllParticles = new List<Particle>();
-        private ParallelSpartialSubdivionCD __Detector;
+        private CircleParticle[] __AllParticles = null;
+        private ParallelSpartialSubdivisionCD __Detector;
 
         public BrownianMotion()
         {
@@ -39,19 +39,20 @@ namespace ParticleSimulator
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             __SpriteBatch = new SpriteBatch(GraphicsDevice);
-            __AllParticles = new List<Particle>(Constants.PARTICLE_COUNT);
+            __AllParticles = new CircleParticle[Constants.PARTICLE_COUNT];
 
             for (int i = 0; i < Constants.PARTICLE_COUNT; i++)
             {
-                __AllParticles.Add(
-                    new Particle(
+                __AllParticles[i] =
+                    new CircleParticle(
                         new Vector2((float)__Random.NextDouble() * Constants.GAME_UNIT_WIDTH,
-                            (float)__Random.NextDouble() * Constants.GAME_UNIT_HEIGHT),
+                                    (float)__Random.NextDouble() * Constants.GAME_UNIT_HEIGHT),
                         new Vector2((float)__Random.NextDouble() * Constants.PARTICLE_MAX_SPEED_UPS,
-                            (float)__Random.NextDouble() * Constants.PARTICLE_MAX_SPEED_UPS), Constants.PARTICLE_RADIUS,
-                        Constants.PARTICLE_MASS));
+                                    (float)__Random.NextDouble() * Constants.PARTICLE_MAX_SPEED_UPS),
+                        Constants.PARTICLE_RADIUS,
+                        Constants.PARTICLE_MASS);
             }
-            __Detector = new ParallelSpartialSubdivionCD(__AllParticles.Count);
+            __Detector = new ParallelSpartialSubdivisionCD(__AllParticles.Length, CircleParticle.Resolver);
         }
 
         protected override void UnloadContent()
@@ -67,7 +68,7 @@ namespace ParticleSimulator
                 particle.Update(fraction);
             }
 
-            __Detector.PerformTest(__AllParticles, __AllParticles[0].R, Particle.ResolveCollision);
+            __Detector.PerformTest(__AllParticles, __AllParticles[0].R);
 
             base.Update(gameTime);
         }
@@ -77,11 +78,10 @@ namespace ParticleSimulator
             GraphicsDevice.Clear(Color.White);
 
             __SpriteBatch.Begin();
-            foreach (Particle particle in __AllParticles)
+            foreach (CircleParticle particle in __AllParticles)
             {
                 //TODO: efficient drawing
-                Vector2 coords;
-                Vector2.Multiply(ref particle.C, Constants.UNIT_PIXEL_SIZE, out coords);
+                var coords = Vector2.Multiply(particle.Coords, Constants.UNIT_PIXEL_SIZE);
 
                 __SpriteBatch.DrawCircle(coords,
                                          particle.R * Constants.UNIT_PIXEL_SIZE,

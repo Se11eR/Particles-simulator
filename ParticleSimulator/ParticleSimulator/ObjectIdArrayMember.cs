@@ -18,7 +18,7 @@ namespace ParticleSimulator
             __Bits = bits;
         }
 
-        public static ObjectIdArrayMember CreateNull()
+        public static ObjectIdArrayMember GetNull()
         {
             return __NullMember;
         }

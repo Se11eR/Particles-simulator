@@ -8,20 +8,22 @@ using Microsoft.Xna.Framework;
 
 namespace ParticleSimulator
 {
-    internal class ParallelSpartialSubdivionCD
+    internal class ParallelSpartialSubdivisionCD
     {
         private readonly int __ParticlesCount;
+        private readonly IBoundingCircleCollisionResolver __Resolver;
         private readonly CellIdArrayMember[] __CellIdArray;
         private readonly ObjectIdArrayMember[] __ObjectIdArray;
         private int __TotalCellIDs;
         private float __CellSize;
-        private List<Particle> __Particles;
+        private IBoundingCircle[] __Particles;
 
-        public ParallelSpartialSubdivionCD(int particlesCount)
+        public ParallelSpartialSubdivisionCD(int particlesCount, IBoundingCircleCollisionResolver resolver)
         {
             __ParticlesCount = particlesCount;
+            __Resolver = resolver;
             __CellIdArray = new CellIdArrayMember[__ParticlesCount * 4];
-            __ObjectIdArray = new ObjectIdArrayMember[__ParticlesCount * 4];
+            __ObjectIdArray = new ObjectIdArrayMember[__ParticlesCount];
         }
 
         public float CellSize
@@ -30,20 +32,36 @@ namespace ParticleSimulator
             set { __CellSize = value; }
         }
 
-        public void PerformTest(List<Particle> particles, float largestR, Action<Particle, Particle> testAction)
+
+        /// <summary>
+        /// Parallel spartial subdivision algorithm as described in 
+        /// http://http.developer.nvidia.com/GPUGems3/gpugems3_ch32.html
+        /// 
+        /// Adapted for CPU usage
+        /// </summary>
+        /// <param name="particles"></param>
+        /// <param name="largestR"></param>
+        /// <param name="testAction"></param>
+        public void PerformTest(IBoundingCircle[] particles, float largestR)
         {
+            //Clear arrays
             ClearArrays();
+
+            //Determine new cell size
             __CellSize = 1.5f * largestR * Constants.SQRT2 * 2;
             __Particles = particles;
 
+            //Initialize CellIDArray and ObjectIDArray
             __TotalCellIDs = 0;
             Parallel.For(0,
                 __ParticlesCount,
                 InitAction);
 
+            //Sort CellIDArray
             //TODO: GPU sort, or Parallel CPU sort
             CpuRadixSort(__CellIdArray);
 
+            //Create Collision cell list from sorted CellIDArray
             var collisionCellList = new ConcurrentQueue<CollisionCellListMember>();
             var blockSize = __CellIdArray.Length / Environment.ProcessorCount;
             var tasks = new Task[Environment.ProcessorCount];
@@ -65,12 +83,14 @@ namespace ParticleSimulator
             }
             Task.WaitAll(tasks);
 
+            //Traverse CollisionCellList and perform narrow fase collision detection
+            //4 passed as 2 dimension version
             var list = collisionCellList.ToArray();
             //4 passes
             for (int T = 0; T < 4; T++)
             {
                 var t = T;
-                Parallel.ForEach(list, curCell => ProcessCollisionCell(particles, testAction, curCell, t));
+                Parallel.ForEach(list, curCell => ProcessCollisionCell(curCell, t));
             }
         }
 
@@ -78,20 +98,20 @@ namespace ParticleSimulator
         {
             for (var i = 0; i < __CellIdArray.Length; i++)
             {
-                __CellIdArray[i] = CellIdArrayMember.CreateNull();
+                __CellIdArray[i] = CellIdArrayMember.GetNull();
             }
             for (var i = 0; i < __ObjectIdArray.Length; i++)
             {
-                __ObjectIdArray[i] = ObjectIdArrayMember.CreateNull();
+                __ObjectIdArray[i] = ObjectIdArrayMember.GetNull();
             }
         }
 
-        private int InitPCells(Vector2 homeCell, float cellSize, Particle curPart, ObjectIdArrayMember obj, int i)
+        private int InitPCells(Vector2 homeCell, float cellSize, IBoundingCircle curPart, ObjectIdArrayMember obj, int i)
         {
             var pCells = 0;
             //left-up
             var c = homeCell * cellSize;
-            if (Vector2.DistanceSquared(curPart.C, c) <= curPart.ScaledR * curPart.ScaledR)
+            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ModifiableR * curPart.ModifiableR)
             {
                 pCells++;
                 var coords = homeCell - Vector2.One;
@@ -103,7 +123,7 @@ namespace ParticleSimulator
             }
 
             //up
-            if (Math.Abs(curPart.C.Y - c.Y) <= curPart.ScaledR)
+            if (Math.Abs(curPart.Coords.Y - c.Y) <= curPart.ModifiableR)
             {
                 pCells++;
                 var coords = homeCell - Vector2.UnitY;
@@ -116,7 +136,7 @@ namespace ParticleSimulator
 
             //up-right
             c = (homeCell + Vector2.UnitX) * cellSize;
-            if (Vector2.DistanceSquared(curPart.C, c) <= curPart.ScaledR * curPart.ScaledR)
+            if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ModifiableR * curPart.ModifiableR)
             {
                 pCells++;
                 var coords = new Vector2(homeCell.X + 1, homeCell.Y - 1);
@@ -130,7 +150,7 @@ namespace ParticleSimulator
             //right
             if (pCells < 3)
             {
-                if (Math.Abs(curPart.C.X - c.X) <= curPart.ScaledR)
+                if (Math.Abs(curPart.Coords.X - c.X) <= curPart.ModifiableR)
                 {
                     pCells++;
                     var coords = homeCell + Vector2.UnitX;
@@ -146,7 +166,7 @@ namespace ParticleSimulator
             if (pCells < 3)
             {
                 c = (homeCell + Vector2.One) * cellSize;
-                if (Vector2.DistanceSquared(curPart.C, c) <= curPart.ScaledR * curPart.ScaledR)
+                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ModifiableR * curPart.ModifiableR)
                 {
                     pCells++;
                     var coords = homeCell + Vector2.One;
@@ -162,7 +182,7 @@ namespace ParticleSimulator
             //down
             if (pCells < 3)
             {
-                if (Math.Abs(curPart.C.Y - c.Y) <= curPart.ScaledR)
+                if (Math.Abs(curPart.Coords.Y - c.Y) <= curPart.ModifiableR)
                 {
                     pCells++;
                     var coords = homeCell + Vector2.UnitY;
@@ -178,7 +198,7 @@ namespace ParticleSimulator
             if (pCells < 3)
             {
                 c = (homeCell + Vector2.UnitY) * cellSize;
-                if (Vector2.DistanceSquared(curPart.C, c) <= curPart.ScaledR * curPart.ScaledR)
+                if (Vector2.DistanceSquared(curPart.Coords, c) <= curPart.ModifiableR * curPart.ModifiableR)
                 {
                     pCells++;
                     var coords = new Vector2(homeCell.X - 1, homeCell.Y + 1);
@@ -193,7 +213,7 @@ namespace ParticleSimulator
             //left
             if (pCells < 3)
             {
-                if (Math.Abs(curPart.C.X - c.X) <= curPart.ScaledR)
+                if (Math.Abs(curPart.Coords.X - c.X) <= curPart.ModifiableR)
                 {
                     pCells++;
                     var coords = homeCell - Vector2.UnitX;
@@ -208,7 +228,7 @@ namespace ParticleSimulator
             return pCells;
         }
 
-        private void ProcessCollisionCell(List<Particle> particles, Action<Particle, Particle> testAction, CollisionCellListMember curCell, int t)
+        private void ProcessCollisionCell(CollisionCellListMember curCell, int t)
         {
             if (__CellIdArray[curCell.CellArrayInd].Type == t)
             {
@@ -234,7 +254,8 @@ namespace ParticleSimulator
                         if (h2 < t && (((and >> h2) & 1) == 1 || h2 == h1 || ((p1 >> h2) & 1) == 1))
                             continue;
 
-                        testAction(particles[(int)__CellIdArray[i].ObjectIndex], particles[(int)__CellIdArray[j].ObjectIndex]);
+                        __Resolver.ResolveCollision(__Particles[(int)__CellIdArray[i].ObjectIndex],
+                                                    __Particles[(int)__CellIdArray[j].ObjectIndex]);
                     }
                 }
             }
@@ -243,8 +264,8 @@ namespace ParticleSimulator
         private void InitAction(int i)
         {
             var curPart = __Particles[i];
-            curPart.ScaledR = curPart.R * Constants.SQRT2;
-            var homeCell = GetCellCoords(__CellSize, curPart.C);
+            curPart.ModifiableR = curPart.R * Constants.SQRT2;
+            var homeCell = GetCellCoords(__CellSize, curPart.Coords);
             var homeCellId = CellCoordsHash(homeCell);
             __CellIdArray[i * 4] = new CellIdArrayMember(true,
                                                             homeCellId,
@@ -261,12 +282,11 @@ namespace ParticleSimulator
                                                    int startIndex,
                                                    int blockSize)
         {
-
-            //TODO: метод работает неправильно
             var lastIntendedIndex = startIndex + blockSize;
 
             var curIndex = startIndex + 1;
             uint h = cellIdArray[startIndex].CellHash;
+            //Skiping
             if (startIndex > 0)
             {
                 while (curIndex < cellIdArray.Length)
@@ -322,6 +342,8 @@ namespace ParticleSimulator
                         else
                             pCounter++;
                     }
+
+                    //Overllapping (no check for curIndex > lastIntendedIndex)
                 }
                 else
                 {
