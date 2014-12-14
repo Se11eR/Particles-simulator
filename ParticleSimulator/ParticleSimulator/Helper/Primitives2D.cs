@@ -5,13 +5,11 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace ParticleSimulator.Helper
 {
-    /// <summary>
-    /// </summary>
     public static class Primitives2D
     {
         #region Private Members
 
-        private static readonly Dictionary<String, List<Vector2>> circleCache = new Dictionary<string, List<Vector2>>();
+        private static readonly Dictionary<uint, List<Vector2>> circleCache = new Dictionary<uint, List<Vector2>>();
         //private static readonly Dictionary<String, List<Vector2>> arcCache = new Dictionary<string, List<Vector2>>();
         private static Texture2D pixel;
 
@@ -55,11 +53,19 @@ namespace ParticleSimulator.Helper
         /// <returns>A list of vectors that, if connected, will create a circle</returns>
         private static List<Vector2> CreateCircle(double radius, int sides)
         {
+            uint hash;
+            unchecked
+            {
+                hash = 0;
+                hash = (hash * 1073741827) ^ (uint)BitConverter.DoubleToInt64Bits(radius);
+                hash = (hash * 1073741827) ^ (uint)sides;
+            }
+
             // Look for a cached version of this circle
             String circleKey = radius + "x" + sides;
-            if (circleCache.ContainsKey(circleKey))
+            if (circleCache.ContainsKey(hash))
             {
-                return circleCache[circleKey];
+                return circleCache[hash];
             }
 
             List<Vector2> vectors = new List<Vector2>();
@@ -76,7 +82,7 @@ namespace ParticleSimulator.Helper
             vectors.Add(new Vector2((float)(radius * Math.Cos(0)), (float)(radius * Math.Sin(0))));
 
             // Cache this circle so that it can be quickly drawn next time
-            circleCache.Add(circleKey, vectors);
+            circleCache.Add(hash, vectors);
 
             return vectors;
         }
